@@ -1,4 +1,4 @@
-# WP Plugin Vue Boilerplate (Vite Build)
+# WP Plugin Vue Boilerplate (Laravel Mix Build)
 ### Run only 4 commands and make your own plugin
 - `git clone https://github.com/hasanuzzamanbe/wp-boilerplate-vue-with-vite.git`
 - `cd wp-boilerplate-vue-with-vite`

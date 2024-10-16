@@ -2,10 +2,10 @@
 
 /**
  * Plugin Name: PluginName
- * Plugin URI: http://wpminers.com/
+ * Plugin URI: #
  * Description: A sample WordPress plugin to implement Vue with tailwind.
- * Author: Hasanuzzaman Shamim
- * Author URI: http://hasanuzzaman.com/
+ * Author: nkb
+ * Author URI: #
  * Version: 1.0.6
  * Text Domain: pluginslug
  */
@@ -26,6 +26,7 @@ class PluginClassName {
         $this->renderMenu();
         $this->disableUpdateNag();
         $this->loadTextDomain();
+        $this->registerAjaxHandler();
     }
 
     public function loadClasses()
@@ -89,7 +90,7 @@ class PluginClassName {
         wp_localize_script('pluginlowercase-script-boot', 'pluginlowercaseAdmin', $pluginlowercase);
 
         echo '<div class="pluginlowercase-admin-page" id="pluginlowercase_app">
-            <div class="main-menu text-white-200 bg-wheat-600 p-4">
+            <div class="main-menu text-white-200 font-bold p-4">
                 <router-link to="/">
                     Home
                 </router-link> |
@@ -115,6 +116,10 @@ class PluginClassName {
         load_plugin_textdomain('pluginslug', false, basename(dirname(__FILE__)) . '/languages');
     }
 
+    public function registerAjaxHandler(){
+        $ajaxHandler = new \PluginClassName\Classes\AdminAjaxHandler();
+        $ajaxHandler->registerEndpoints();
+    }
 
     /**
      * Disable update nag for the dashboard area

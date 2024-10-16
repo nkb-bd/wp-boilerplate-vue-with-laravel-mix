@@ -1,6 +1,11 @@
 import('tailwindcss').Config
 module.exports = {
-  content: ['./public/**/*.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  content: [
+    'plugin-entry.php',
+    './includes/**/*.php',
+     './src/**/**/*.{vue,js}',
+    "!./assets/css/style.css"
+  ],
   theme: {
     extend: {},
   },

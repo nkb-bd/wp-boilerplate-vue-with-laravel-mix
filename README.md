@@ -3,15 +3,14 @@
 - `git clone https://github.com/hasanuzzamanbe/wp-boilerplate-vue-with-vite.git`
 - `cd wp-boilerplate-vue-with-vite`
 - `npm i`
-- `node aladin` and enter your Plugin Name in the command prompt.
+- ` wp replace-slug pluginlowercase MyPluginName` to replace all slug or anything else like CONSTANTS
 
-Aladdin 🧞‍♂️ will make it within a blink. 
 
 Congratulations Everything is done 🥳 
 `npm run dev` to run development mode. Find and activate your plugin in WordPress.
 
 ------------------
-This is a Customizable Boilerplate WordPress Plugin that is developed as a single-page app with Vue js and Vite. You don't have to reload the page all the time.
+This is a Customizable Boilerplate WordPress Plugin that is developed as a single-page app with Vue js and Laravel Mix. You don't have to reload the page all the time.
 Read the <a href="https://github.com/hasanuzzamanbe/wp-boilerplate-vue-with-vite/#make-your-own-plugin-from-boilerplate-within-10-sec-quick-setup-%EF%B8%8F">Detailed quick setup</a> can help to make a new fresh plugin within 10 sec
 ### How faster is Vite than the Webpack in development?
 It needs milliseconds to update the dom, [Check very short video](https://www.youtube.com/watch?v=VA3G8ahoHLE)

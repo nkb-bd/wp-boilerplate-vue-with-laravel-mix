@@ -35,6 +35,7 @@ class PluginClassName {
     public function loadClasses()
     {
         require PLUGIN_CONST_DIR . 'includes/autoload.php';
+        require PLUGIN_CONST_DIR . 'includes/Classes/SlugHelperCLI.php';
     }
 
     public function renderMenu()
@@ -162,6 +163,24 @@ class PluginClassName {
     public function registerShortCodes()
     {
         // Use add_shortcode('shortcode_name', 'function_name') to register shortcode
+    }
+    
+    public function getPluginList()
+    {
+        if (!current_user_can('manage_options')) {
+            return false;
+        }
+        include_once ABSPATH . 'wp-admin/includes/plugin.php';
+        $plugins = get_plugins();
+        return array_map(function ($plugin) {
+            return [
+                'name' => $plugin['Name'],
+                'version' => $plugin['Version'],
+                'description' => $plugin['Description'],
+                'author' => $plugin['Author'],
+            ];
+        }, $plugins);
+        
     }
 }
 

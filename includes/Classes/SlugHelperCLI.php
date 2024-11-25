@@ -4,7 +4,8 @@ namespace PluginClassName\Classes;
 
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
-use \WP_CLI;
+use WP_CLI;
+use FilesystemIterator;
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
@@ -22,7 +23,24 @@ if (defined('WP_CLI') && WP_CLI) {
          *
          * @var array
          */
-        private $allowed_extensions = ['php', 'txt', 'js', 'css', 'json', 'md','vue'];
+        private $allowed_extensions = ['php', 'txt', 'js', 'css', 'json', 'md'];
+        
+        /**
+         * Directories to ignore
+         *
+         * @var array
+         */
+        private $ignored_directories = [
+            'node_modules',
+            'vendor',
+            '.git',
+            'build',
+            'dist',
+            '.svn',
+            'bower_components',
+            'tmp',
+            'cache'
+        ];
         
         /**
          * Execute the replacement command.
@@ -76,6 +94,9 @@ if (defined('WP_CLI') && WP_CLI) {
             $is_dry_run = isset($assoc_args['dry-run']);
             
             try {
+                WP_CLI::log("Scanning directory: {$directory}");
+                WP_CLI::log("Ignored directories: " . implode(', ', $this->ignored_directories));
+                
                 $files = $this->get_files($directory);
                 
                 if (empty($files)) {
@@ -83,6 +104,7 @@ if (defined('WP_CLI') && WP_CLI) {
                     return;
                 }
                 
+                WP_CLI::log("Found " . count($files) . " files to process.");
                 $this->process_files($files, $search, $replace, $is_dry_run);
                 
             } catch (\Exception $e) {
@@ -101,16 +123,17 @@ if (defined('WP_CLI') && WP_CLI) {
         private function process_files($files, $search, $replace, $is_dry_run) {
             $count = 0;
             $modified_files = [];
+            $skipped_files = [];
             
             foreach ($files as $file) {
                 if (!is_readable($file)) {
-                    WP_CLI::warning("File not readable: {$file}");
+                    $skipped_files[] = ["file" => $file, "reason" => "not readable"];
                     continue;
                 }
                 
                 $contents = file_get_contents($file);
                 if ($contents === false) {
-                    WP_CLI::warning("Could not read file: {$file}");
+                    $skipped_files[] = ["file" => $file, "reason" => "could not read contents"];
                     continue;
                 }
                 
@@ -121,13 +144,13 @@ if (defined('WP_CLI') && WP_CLI) {
                     
                     if (!$is_dry_run) {
                         if (!is_writable($file)) {
-                            WP_CLI::warning("File not writable: {$file}");
+                            $skipped_files[] = ["file" => $file, "reason" => "not writable"];
                             continue;
                         }
                         
                         $result = file_put_contents($file, $updated_contents);
                         if ($result === false) {
-                            WP_CLI::warning("Failed to write to file: {$file}");
+                            $skipped_files[] = ["file" => $file, "reason" => "failed to write"];
                             continue;
                         }
                         $count++;
@@ -136,6 +159,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 }
             }
             
+            // Show results
             if ($is_dry_run) {
                 if (!empty($modified_files)) {
                     WP_CLI::log("\nFiles that would be modified:");
@@ -147,6 +171,14 @@ if (defined('WP_CLI') && WP_CLI) {
             } else {
                 WP_CLI::success("String replaced in {$count} file(s).");
             }
+            
+            // Show skipped files if any
+            if (!empty($skipped_files)) {
+                WP_CLI::log("\nSkipped files:");
+                foreach ($skipped_files as $skip) {
+                    WP_CLI::log("- {$skip['file']} (Reason: {$skip['reason']})");
+                }
+            }
         }
         
         /**
@@ -156,20 +188,37 @@ if (defined('WP_CLI') && WP_CLI) {
          * @return array The list of files.
          */
         private function get_files($directory) {
-            $iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS)
-            );
-            
             $files = [];
-            foreach ($iterator as $file) {
-                if ($file->isFile() &&
-                    in_array($file->getExtension(), $this->allowed_extensions, true)) {
-                    $files[] = $file->getPathname();
+            
+            try {
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator(
+                        $directory,
+                        RecursiveDirectoryIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS
+                    )
+                );
+                
+                foreach ($iterator as $file) {
+                    // Skip if parent directory should be ignored
+                    foreach ($this->ignored_directories as $ignored) {
+                        if (strpos($file->getPathname(), DIRECTORY_SEPARATOR . $ignored . DIRECTORY_SEPARATOR) !== false) {
+                            continue 2;
+                        }
+                    }
+                    
+                    // Only include files with allowed extensions
+                    if ($file->isFile() &&
+                        in_array($file->getExtension(), $this->allowed_extensions, true)) {
+                        $files[] = $file->getPathname();
+                    }
                 }
+            } catch (\UnexpectedValueException $e) {
+                WP_CLI::warning("Permission denied or invalid directory structure in: {$directory}");
             }
+            
             return $files;
         }
     }
     
-    \WP_CLI::add_command('replace-slug', ReplacePluginSlugCommand::class);
+    WP_CLI::add_command('replace-slug', ReplacePluginSlugCommand::class);
 }

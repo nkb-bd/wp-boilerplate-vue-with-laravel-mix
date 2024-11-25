@@ -9,6 +9,9 @@
  * Version: 1.0.6
  * Text Domain: pluginslug
  */
+
+use PluginClassName\Classes\PluginMenuBuilder;
+
 define('PLUGIN_CONST_URL', plugin_dir_url(__FILE__));
 define('PLUGIN_CONST_DIR', plugin_dir_path(__FILE__));
 
@@ -36,37 +39,38 @@ class PluginClassName {
 
     public function renderMenu()
     {
-        add_action('admin_menu', function () {
-            if (!current_user_can('manage_options')) {
-                return;
-            }
-            global $submenu;
-            add_menu_page(
-                'PluginClassName',
-                'PluginName',
-                'manage_options',
-                'pluginslug.php',
-                array($this, 'renderAdminPage'),
-                'dashicons-editor-code',
-                25
-            );
-            $submenu['pluginslug.php']['dashboard'] = array(
-                'Dashboard',
-                'manage_options',
-                'admin.php?page=pluginslug.php#/',
-            );
-            $submenu['pluginslug.php']['contact'] = array(
-                'Contact',
-                'manage_options',
-                'admin.php?page=pluginslug.php#/contact',
-            );
-        });
+        try {
+            $menu = PluginMenuBuilder::getInstance();
+        
+            $menu->setPluginSettings([
+                'page_title' => 'My Plugin',
+                'menu_title' => 'My Plugin',
+                'menu_slug'  => 'my-plugin',
+                'callback'   => [$this, 'renderAdminPage'],
+                'icon'       => 'dashicons-admin-generic'
+            ]);
+        
+            $menu->addMenuItem('dashboard', [
+                'title' => 'Dashboard',
+                'slug'  => '',
+                'order' => 10
+            ])->addMenuItem('contact', [
+                'title' => 'Contact',
+                'slug'  => 'contact',
+                'order' => 20
+            ]);
+        
+            $menu->buildMenu();
+        
+        } catch (\Exception $e) {
+            error_log('Menu Builder Error: ' . $e->getMessage());
+        }
     }
 
     /**
      * Main admin Page where the Vue app will be rendered
      * For translatable string localization you may use like this
-     * 
+     *
      *      add_filter('pluginlowercase/frontend_translatable_strings', function($translatable){
      *          $translatable['world'] = __('World', 'pluginslug');
      *          return $translatable;
@@ -106,7 +110,7 @@ class PluginClassName {
     /*
     * NB: text-domain should match exact same as plugin directory name (Plugin Name)
     * WordPress plugin convention: if plugin name is "My Plugin", then text-domain should be "my-plugin"
-    * 
+    *
     * For PHP you can use __() or _e() function to translate text like this __('My Text', 'pluginslug')
     * For Vue you can use $t('My Text') to translate text, You must have to localize "My Text" in PHP first
     * Check example in "renderAdminPage" function, how to localize text for Vue in i18n array

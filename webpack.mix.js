@@ -35,7 +35,7 @@ mix
         version: 3,
         extractStyles: true // Extract Vue component styles to a CSS file
     })
-    .sass('src/assets/style.scss', 'assets/css/style.css')
+    .sass('src/admin/style.scss', 'assets/css/style.css')
     .options({
         processCssUrls: false,
         postCss: [
